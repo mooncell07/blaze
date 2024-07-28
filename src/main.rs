@@ -1,3 +1,7 @@
+mod server;
+use server::Server;
+
 fn main(){
-    println!("hello")
+    let mut server = Server::new();
+    server.run()
 }
