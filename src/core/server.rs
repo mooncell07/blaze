@@ -1,4 +1,5 @@
 use std::net::{TcpListener, TcpStream};
+use super::response::Response;
 
 pub struct Server {
     pub listener: TcpListener,
@@ -17,7 +18,8 @@ impl Server {
     pub fn run(&mut self) {
         for stream in self.listener.incoming() {
             match stream {
-                Ok(stream) => {
+                Ok(mut stream) => {
+                    let _ = Response::from_stream(&mut stream);
                     self.clients.push(stream);
                 }
                 Err(e) => {
