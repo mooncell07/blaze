@@ -1,31 +1,40 @@
-pub struct PacketBase{
-    pub protocol_id: u8
+use byteorder::{BigEndian, ReadBytesExt};
+use std::fmt::Debug;
+use std::io::{Read, Result};
+#[derive(Debug)]
+pub enum PackeType {
+    DOWNSTREAM,
+    UPSTREAM,
+}
+#[derive(Debug)]
+pub struct BasePacket {
+    pub packet_type: PackeType,
+    pub packet_id: u8,
 }
 
-pub trait Packet {
-    fn serialize(&self) -> [u8; 1024];
-    fn deserialize(data: &[u8; 1024]) -> Self;
+pub trait Serializable {
+    fn build(&self) -> &[u8; 1024];
 }
 
-pub struct PlayerIdentificationPacket{
-    pub base: PacketBase,
+pub trait Deserializable: Sized + Debug {
+    fn build(reader: impl Read, base: BasePacket) -> Result<Self>;
+}
+
+#[derive(Debug)]
+pub struct PlayerIdentificationPacket {
+    pub base: BasePacket,
     pub protocol_version: u8,
-    pub username: String,
-    pub verification_key: String,
+    pub username: u64,
+    pub verification_key: u64,
 }
 
-impl Packet for PlayerIdentificationPacket {
-    fn deserialize(data: &[u8; 1024]) -> Self {
-        let protocol_id = u8::from_le_bytes([data[0]]);
-        let protocol_version = u8::from_le_bytes([data[1]]);
-        let username = String::from_utf8_lossy(&data[2..66]).to_string();
-        let verification_key = String::from_utf8_lossy(&data[66..120]).to_string();
-
-        Self {base: PacketBase{protocol_id}, protocol_version, username, verification_key}
-    }
-
-    fn serialize(&self) -> [u8; 1024] {
-        
-        [0; 1024]
+impl Deserializable for PlayerIdentificationPacket {
+    fn build(mut reader: impl Read, base: BasePacket) -> Result<Self> {
+        Ok(Self {
+            base: base,
+            protocol_version: reader.read_u8()?,
+            username: reader.read_u64::<BigEndian>()?,
+            verification_key: reader.read_u64::<BigEndian>()?,
+        })
     }
 }

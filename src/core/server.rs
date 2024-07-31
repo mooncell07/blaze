@@ -1,5 +1,5 @@
-use std::net::{TcpListener, TcpStream};
 use super::response::Response;
+use std::net::{TcpListener, TcpStream};
 
 pub struct Server {
     pub listener: TcpListener,
@@ -8,7 +8,8 @@ pub struct Server {
 
 impl Server {
     pub fn new() -> Self {
-        let listener = TcpListener::bind("127.0.0.1:25565").expect("Failed to initialize the listener.");
+        let listener =
+            TcpListener::bind("127.0.0.1:25565").expect("Failed to initialize the listener.");
         Self {
             listener,
             clients: Vec::new(),
