@@ -18,7 +18,6 @@ impl Response {
 
     fn read_packet(&self) -> Result<impl Deserializable, Error> {
         let mut cursor = Cursor::new(self.data);
-
         let base = BasePacket {
             packet_type: PackeType::UPSTREAM,
             packet_id: cursor.read_u8()?,
