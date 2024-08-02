@@ -1,6 +1,7 @@
 use byteorder::{BigEndian, ReadBytesExt};
 use std::fmt::Debug;
-use std::io::{Read, Result};
+use std::io::{Cursor, Read, Result};
+
 #[derive(Debug)]
 pub enum PackeType {
     DOWNSTREAM,
@@ -17,24 +18,31 @@ pub trait Serializable {
 }
 
 pub trait Deserializable: Sized + Debug {
-    fn build(reader: impl Read, base: BasePacket) -> Result<Self>;
+    fn build(reader: Cursor<[u8; 1024]>, base: BasePacket) -> Result<Self>;
 }
+
+fn read_next_string(reader: &mut Cursor<[u8; 1024]>) -> Result<String> {
+    let mut char_buffer: [u8; 64] = [42; 64];
+    reader.read_exact(&mut char_buffer)?;
+    Ok(String::from_utf8_lossy(&char_buffer).to_string())
+}
+
 
 #[derive(Debug)]
 pub struct PlayerIdentificationPacket {
     pub base: BasePacket,
     pub protocol_version: u8,
-    pub username: u64,
-    pub verification_key: u64,
+    pub username: String,
+    pub verification_key: String,
 }
 
 impl Deserializable for PlayerIdentificationPacket {
-    fn build(mut reader: impl Read, base: BasePacket) -> Result<Self> {
+    fn build(mut reader: Cursor<[u8; 1024]>, base: BasePacket) -> Result<Self> {
         Ok(Self {
             base: base,
             protocol_version: reader.read_u8()?,
-            username: reader.read_u64::<BigEndian>()?,
-            verification_key: reader.read_u64::<BigEndian>()?,
+            username: {read_next_string(&mut reader)?},
+            verification_key: {read_next_string(&mut reader)?},
         })
     }
 }
