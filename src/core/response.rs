@@ -1,4 +1,4 @@
-use super::packet::{BasePacket, Deserializable, PackeType, PlayerIdentificationPacket};
+use super::packet::{BasePacket, Deserializable, PackeType, Packet, PlayerIdentificationPacket};
 use byteorder::ReadBytesExt;
 use std::{
     io::{Cursor, Error, ErrorKind, Read},
@@ -16,7 +16,7 @@ impl Response {
         Self { data }
     }
 
-    fn read_packet(&self) -> Result<impl Deserializable, Error> {
+    fn read_packet(&self) -> Result<Packet, Error> {
         let mut cursor = Cursor::new(self.data);
         let base = BasePacket {
             packet_type: PackeType::UPSTREAM,
@@ -24,12 +24,14 @@ impl Response {
         };
 
         return match base.packet_id {
-            0x00 => Ok(PlayerIdentificationPacket::build(cursor, base)?),
+            0x00 => Ok(Packet::PlayerIdentification(
+                PlayerIdentificationPacket::build(cursor, base)?,
+            )),
             _ => Err(Error::new(ErrorKind::InvalidData, "Unknown packet ID")),
         };
     }
 
-    pub fn to_packet(&self) -> impl Deserializable {
-        return self.read_packet().unwrap();
+    pub fn to_packet(&self) -> Packet {
+        return self.read_packet().expect("Couldn't build packet.");
     }
 }
