@@ -7,7 +7,7 @@ pub enum PackeType {
     DOWNSTREAM,
     UPSTREAM,
 }
-
+#[derive(Debug)]
 pub struct BasePacket {
     pub packet_type: PackeType,
     pub packet_id: u8,
