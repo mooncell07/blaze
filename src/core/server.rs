@@ -39,13 +39,13 @@ impl Server {
     fn send_packet(&self, packet: &impl Serializable, mut stream: &TcpStream) {
         let serialized_packet = &packet.build().expect("Couldn't build packet.");
         stream
-            .write(&serialized_packet)
+            .write(serialized_packet)
             .expect("Couldn't send packet.");
     }
 
     fn run_player_handshake(&self, stream: &TcpStream) -> i32 {
         self.send_packet(&self.server_identification_packet, stream);
-        return 0;
+        0
     }
 
     pub fn run(&mut self) {
