@@ -1,7 +1,6 @@
 use super::{
     packet::{
-        BasePacket, PackeType, Packet, Serializable,
-        ServerIdentificationPacket,
+        LevelInitializePacket, Packet, Serializable, ServerIdentificationPacket
     },
     response::Response,
 };
@@ -13,7 +12,6 @@ use std::{
 pub struct Server {
     pub listener: TcpListener,
     pub clients: Vec<TcpStream>,
-    pub server_identification_packet: ServerIdentificationPacket,
 }
 
 impl Server {
@@ -23,16 +21,6 @@ impl Server {
         Self {
             listener,
             clients: Vec::new(),
-            server_identification_packet: ServerIdentificationPacket {
-                base: BasePacket {
-                    packet_type: PackeType::DOWNSTREAM,
-                    packet_id: 0x00,
-                },
-                protocol_version: 0x07,
-                server_name: "wooo".to_string(),
-                server_motd: "idk".to_string(),
-                user_type: 0x64,
-            },
         }
     }
 
@@ -44,8 +32,14 @@ impl Server {
     }
 
     fn run_player_handshake(&self, stream: &TcpStream) -> i32 {
-        self.send_packet(&self.server_identification_packet, stream);
+        let server_identification_packet = ServerIdentificationPacket::new("woo", "idk", 0x64);
+        self.send_packet(&server_identification_packet, stream);
         0
+    }
+
+    fn generate_world(&self, stream: &TcpStream){
+        let level_initialize_packet = LevelInitializePacket::new();
+        self.send_packet(&level_initialize_packet, stream);
     }
 
     pub fn run(&mut self) {
@@ -58,6 +52,7 @@ impl Server {
                         Packet::PlayerIdentification(_) => {
                             let status = self.run_player_handshake(&stream);
                             if status == 0 {
+                                self.generate_world(&stream);
                                 self.clients.push(stream);
                             }
                         }

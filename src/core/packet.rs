@@ -1,12 +1,15 @@
 use byteorder::{ReadBytesExt, WriteBytesExt};
 use std::fmt::Debug;
-use std::io::{Cursor, Read, Result, Write};
+use std::io::{Bytes, Cursor, Read, Result, Write};
+
+use super::server;
 
 #[derive(Debug)]
 pub enum PackeType {
     DOWNSTREAM,
     UPSTREAM,
 }
+
 #[derive(Debug)]
 pub struct BasePacket {
     pub packet_type: PackeType,
@@ -25,6 +28,12 @@ fn read_next_string(reader: &mut Cursor<[u8; 1024]>) -> Result<String> {
     let mut char_buffer: [u8; 64] = [42; 64];
     reader.read_exact(&mut char_buffer)?;
     Ok(String::from_utf8_lossy(&char_buffer).to_string())
+}
+
+pub fn get_qualified_string(string: &str) -> String {
+    let padding_size = 64 - string.len();
+    let padding = " ".repeat(padding_size);
+    string.to_owned() + &padding
 }
 
 #[derive(Debug)]
@@ -63,6 +72,67 @@ impl Serializable for ServerIdentificationPacket {
         writer.write(self.server_motd.as_bytes())?;
         writer.write_u8(self.user_type)?;
         Ok(writer)
+    }
+}
+
+impl ServerIdentificationPacket {
+    pub fn new(server_name: &str, server_motd: &str, user_type: u8) -> Self {
+        Self {
+            base: BasePacket {
+                packet_type: PackeType::DOWNSTREAM,
+                packet_id: 0x00,
+            },
+            protocol_version: 0x07,
+            server_name: get_qualified_string(&server_name),
+            server_motd: get_qualified_string(&server_motd),
+            user_type: user_type,
+        }
+    }
+}
+
+pub struct LevelInitializePacket {
+    pub base: BasePacket,
+}
+
+impl Serializable for LevelInitializePacket {
+    fn build(&self) -> Result<Vec<u8>> {
+        let mut writer = vec![];
+        writer.write_u8(self.base.packet_id)?;
+        Ok(writer)
+    }
+}
+
+impl LevelInitializePacket {
+    pub fn new() -> Self {
+        Self {
+            base: BasePacket {
+                packet_type: PackeType::DOWNSTREAM,
+                packet_id: 0x02,
+            },
+        }
+    }
+}
+
+pub struct PingPacket {
+    pub base: BasePacket,
+}
+
+impl Serializable for PingPacket {
+    fn build(&self) -> Result<Vec<u8>> {
+        let mut writer = vec![];
+        writer.write_u8(self.base.packet_id)?;
+        Ok(writer)
+    }
+}
+
+impl PingPacket {
+    pub fn new() -> Self {
+        Self {
+            base: BasePacket {
+                packet_type: PackeType::DOWNSTREAM,
+                packet_id: 0x01,
+            },
+        }
     }
 }
 
