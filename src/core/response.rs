@@ -23,15 +23,15 @@ impl Response {
             packet_id: cursor.read_u8()?,
         };
 
-        return match base.packet_id {
+        match base.packet_id {
             0x00 => Ok(Packet::PlayerIdentification(
                 PlayerIdentificationPacket::build(cursor, base)?,
             )),
             _ => Err(Error::new(ErrorKind::InvalidData, "Unknown packet ID")),
-        };
+        }
     }
 
     pub fn to_packet(&self) -> Packet {
-        return self.read_packet().expect("Couldn't build packet.");
+        self.read_packet().expect("Couldn't build packet.")
     }
 }

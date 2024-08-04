@@ -1,4 +1,4 @@
-use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use byteorder::{ReadBytesExt, WriteBytesExt};
 use std::fmt::Debug;
 use std::io::{Cursor, Read, Result, Write};
 
@@ -8,7 +8,6 @@ pub enum PackeType {
     UPSTREAM,
 }
 
-#[derive(Debug)]
 pub struct BasePacket {
     pub packet_type: PackeType,
     pub packet_id: u8,
@@ -39,7 +38,7 @@ pub struct PlayerIdentificationPacket {
 impl Deserializable for PlayerIdentificationPacket {
     fn build(mut reader: Cursor<[u8; 1024]>, base: BasePacket) -> Result<Self> {
         Ok(Self {
-            base: base,
+            base,
             protocol_version: reader.read_u8()?,
             username: { read_next_string(&mut reader)? },
             verification_key: { read_next_string(&mut reader)? },
@@ -63,7 +62,7 @@ impl Serializable for ServerIdentificationPacket {
         writer.write(self.server_name.as_bytes())?;
         writer.write(self.server_motd.as_bytes())?;
         writer.write_u8(self.user_type)?;
-        return Ok(writer);
+        Ok(writer)
     }
 }
 
