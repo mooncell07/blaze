@@ -1,30 +1,35 @@
 use super::{
     packet::{
-        LevelFinalizePacket, LevelInitializePacket, Packet, Serializable, ServerIdentificationPacket
+        LevelFinalizePacket, LevelInitializePacket, Packet, Serializable,
+        ServerIdentificationPacket,
     },
-    response::Response, world::World,
+    response::Response,
+    world::World,
 };
 use std::{
-    io::Write, net::{TcpListener, TcpStream}
+    io::Write,
+    net::{TcpListener, TcpStream},
 };
-
-
 
 pub struct Server {
     pub listener: TcpListener,
+    pub name: String,
+    pub motd: String,
     pub clients: Vec<TcpStream>,
-    pub world: World
+    pub world: World,
 }
 
 impl Server {
-    pub fn new() -> Self {
+    pub fn new(name: String, motd: String) -> Self {
         let listener =
             TcpListener::bind("127.0.0.1:25565").expect("Failed to initialize the listener.");
         let world = World::from_file("/home/mooncell07/dev/blaze/main.gz");
         Self {
             listener,
+            name,
+            motd,
             clients: Vec::new(),
-            world
+            world,
         }
     }
 
@@ -35,16 +40,15 @@ impl Server {
             .expect("Couldn't send packet.");
     }
 
-    fn run_player_handshake(&self, stream: &TcpStream) -> i32 {
-        let server_identification_packet = ServerIdentificationPacket::new("woo", "idk", 0x64);
+    fn run_player_handshake(&self, stream: &TcpStream){
+        let server_identification_packet = ServerIdentificationPacket::new(&self.name, &self.motd, 0x64);
         self.send_packet(&server_identification_packet, stream);
-        0
     }
 
-    fn generate_world(&self, stream: &TcpStream){
+    fn generate_world(&self, stream: &TcpStream) {
         let level_initialize_packet = LevelInitializePacket::new();
         self.send_packet(&level_initialize_packet, stream);
-        for packet in self.world.packets.as_slice(){
+        for packet in self.world.packets.as_slice() {
             self.send_packet(packet, stream);
         }
         let level_finalize_packet = LevelFinalizePacket::new();
@@ -59,11 +63,9 @@ impl Server {
 
                     match resp {
                         Packet::PlayerIdentification(_) => {
-                            let status = self.run_player_handshake(&stream);
-                            if status == 0 {
-                                self.generate_world(&stream);
-                                self.clients.push(stream);
-                            }
+                            self.run_player_handshake(&stream);
+                            self.generate_world(&stream);
+                            self.clients.push(stream);
                         }
                     }
                 }
