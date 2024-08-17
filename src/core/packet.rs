@@ -223,6 +223,34 @@ impl LevelDataChunkPacket {
 }
 
 
+pub struct LevelFinalizePacket{
+    pub base: BasePacket,
+    pub x: i16,
+    pub y: i16,
+    pub z: i16
+}
+
+impl Serializable for LevelFinalizePacket{
+    fn build(&self) -> Result<Vec<u8>> {
+        let mut writer = vec![];
+        writer.write_u8(self.base.packet_id)?;
+        writer.write_i16::<BigEndian>(self.x)?;
+        writer.write_i16::<BigEndian>(self.y)?;
+        writer.write_i16::<BigEndian>(self.z)?;
+        Ok(writer)
+    }
+}
+
+impl LevelFinalizePacket {
+    pub fn new() -> Self{
+        Self{
+            base: BasePacket{
+                packet_type: PackeType::DOWNSTREAM, 
+                packet_id: 0x04},
+            x: 256, y:64, z: 256}
+    }
+}
+
 pub enum Packet {
     PlayerIdentification(PlayerIdentificationPacket),
 }

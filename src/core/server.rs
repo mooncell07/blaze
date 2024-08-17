@@ -1,11 +1,11 @@
 use super::{
     packet::{
-        LevelInitializePacket, Packet, Serializable, ServerIdentificationPacket
+        LevelFinalizePacket, LevelInitializePacket, Packet, Serializable, ServerIdentificationPacket
     },
     response::Response, world::World,
 };
 use std::{
-    io::{Write}, net::{TcpListener, TcpStream}
+    io::Write, net::{TcpListener, TcpStream}
 };
 
 
@@ -47,6 +47,8 @@ impl Server {
         for packet in self.world.packets.as_slice(){
             self.send_packet(packet, stream);
         }
+        let level_finalize_packet = LevelFinalizePacket::new();
+        self.send_packet(&level_finalize_packet, stream);
     }
 
     pub fn run(&mut self) {
