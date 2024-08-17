@@ -1,4 +1,4 @@
-use super::packet::{BasePacket, Deserializable, PackeType, Packet, PlayerIdentificationPacket};
+use super::packet::{BasePacket, Deserializable, PacketType, Packet, PlayerIdentificationPacket};
 use byteorder::ReadBytesExt;
 use std::{
     io::{Cursor, Error, ErrorKind, Read},
@@ -19,7 +19,7 @@ impl Response {
     fn read_packet(&self) -> Result<Packet, Error> {
         let mut cursor = Cursor::new(self.data);
         let base = BasePacket {
-            packet_type: PackeType::UPSTREAM,
+            packet_type: PacketType::Upstream,
             packet_id: cursor.read_u8()?,
         };
 
