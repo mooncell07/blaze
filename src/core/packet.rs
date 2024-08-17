@@ -1,8 +1,62 @@
-use byteorder::{ReadBytesExt, WriteBytesExt};
+use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use std::fmt::Debug;
-use std::io::{Bytes, Cursor, Read, Result, Write};
+use std::io::{Cursor, Read, Result, Write};
 
-use super::server;
+
+#[derive(Debug)]
+enum BlockType {
+    Air = 0,
+    Stone = 1,
+    Grass = 2,
+    Dirt = 3,
+    Cobblestone = 4,
+    WoodPlank = 5,
+    Sapling = 6,
+    Bedrock = 7,
+    Water = 8,
+    StationaryWater = 9,
+    Lava = 10,
+    StationaryLava = 11,
+    Sand = 12,
+    Gravel = 13,
+    GoldOre = 14,
+    IronOre = 15,
+    CoalOre = 16,
+    Wood = 17,
+    Leaves = 18,
+    Sponge = 19,
+    Glass = 20,
+    RedCloth = 21,
+    OrangeCloth = 22,
+    YellowCloth = 23,
+    LimeCloth = 24,
+    GreenCloth = 25,
+    AquaGreenCloth = 26,
+    CyanCloth = 27,
+    BlueCloth = 28,
+    PurpleCloth = 29,
+    IndigoCloth = 30,
+    VioletCloth = 31,
+    MagentaCloth = 32,
+    PinkCloth = 33,
+    BlackCloth = 34,
+    GrayCloth = 35,
+    WhiteCloth = 36,
+    YellowFlower = 37,
+    RedFlower = 38,
+    BrownMushroom = 39,
+    RedMushroom = 40,
+    GoldBlock = 41,
+    IronBlock = 42,
+    DoubleSlab = 43,
+    Slab = 44,
+    BrickBlock = 45,
+    TNT = 46,
+    Bookshelf = 47,
+    MossyCobblestone = 48,
+    Obsidian = 49,
+}
+
 
 #[derive(Debug)]
 pub enum PackeType {
@@ -83,9 +137,9 @@ impl ServerIdentificationPacket {
                 packet_id: 0x00,
             },
             protocol_version: 0x07,
-            server_name: get_qualified_string(&server_name),
-            server_motd: get_qualified_string(&server_motd),
-            user_type: user_type,
+            server_name: get_qualified_string(server_name),
+            server_motd: get_qualified_string(server_motd),
+            user_type,
         }
     }
 }
@@ -135,6 +189,39 @@ impl PingPacket {
         }
     }
 }
+#[derive(Debug)]
+pub struct LevelDataChunkPacket{
+    pub base: BasePacket,
+    pub chunk_length: i16,
+    pub chunk_data: Vec<u8>,
+    pub percent_complete: u8
+}
+
+impl Serializable for LevelDataChunkPacket {
+    fn build(&self) -> Result<Vec<u8>> {
+        let mut writer = vec![];
+        writer.write_u8(self.base.packet_id)?;
+        writer.write_i16::<BigEndian>(self.chunk_length)?;
+        writer.write_all(&self.chunk_data)?;
+        writer.write_u8(self.percent_complete)?;
+        Ok(writer)
+    }
+}
+
+impl LevelDataChunkPacket {
+    pub fn new(chunk_length: i16, chunk_data: Vec<u8>, percent_complete: u8) -> Self {
+        Self {
+            base: BasePacket {
+                packet_type: PackeType::DOWNSTREAM,
+                packet_id: 0x03,
+            },
+            chunk_length,
+            chunk_data,
+            percent_complete,
+        }
+    }
+}
+
 
 pub enum Packet {
     PlayerIdentification(PlayerIdentificationPacket),
