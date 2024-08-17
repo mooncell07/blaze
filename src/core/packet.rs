@@ -2,6 +2,7 @@ use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use std::fmt::Debug;
 use std::io::{Cursor, Read, Result, Write};
 
+pub const CPE: u8 = 0x42;
 
 #[derive(Debug)]
 enum BlockType {
@@ -59,14 +60,14 @@ enum BlockType {
 
 
 #[derive(Debug)]
-pub enum PackeType {
-    DOWNSTREAM,
-    UPSTREAM,
+pub enum PacketType {
+    Downstream,
+    Upstream,
 }
 
 #[derive(Debug)]
 pub struct BasePacket {
-    pub packet_type: PackeType,
+    pub packet_type: PacketType,
     pub packet_id: u8,
 }
 
@@ -96,16 +97,24 @@ pub struct PlayerIdentificationPacket {
     pub protocol_version: u8,
     pub username: String,
     pub verification_key: String,
+    pub unused: u8,
 }
 
 impl Deserializable for PlayerIdentificationPacket {
     fn build(mut reader: Cursor<[u8; 1024]>, base: BasePacket) -> Result<Self> {
-        Ok(Self {
+        let packet = Self {
             base,
             protocol_version: reader.read_u8()?,
             username: { read_next_string(&mut reader)? },
             verification_key: { read_next_string(&mut reader)? },
-        })
+            unused: reader.read_u8()?
+        };
+
+        if packet.unused == CPE {
+            // cpe
+        }
+
+        Ok(packet)
     }
 }
 
@@ -133,7 +142,7 @@ impl ServerIdentificationPacket {
     pub fn new(server_name: &str, server_motd: &str, user_type: u8) -> Self {
         Self {
             base: BasePacket {
-                packet_type: PackeType::DOWNSTREAM,
+                packet_type: PacketType::Downstream,
                 packet_id: 0x00,
             },
             protocol_version: 0x07,
@@ -160,7 +169,7 @@ impl LevelInitializePacket {
     pub fn new() -> Self {
         Self {
             base: BasePacket {
-                packet_type: PackeType::DOWNSTREAM,
+                packet_type: PacketType::Downstream,
                 packet_id: 0x02,
             },
         }
@@ -183,7 +192,7 @@ impl PingPacket {
     pub fn new() -> Self {
         Self {
             base: BasePacket {
-                packet_type: PackeType::DOWNSTREAM,
+                packet_type: PacketType::Downstream,
                 packet_id: 0x01,
             },
         }
@@ -212,7 +221,7 @@ impl LevelDataChunkPacket {
     pub fn new(chunk_length: i16, chunk_data: Vec<u8>, percent_complete: u8) -> Self {
         Self {
             base: BasePacket {
-                packet_type: PackeType::DOWNSTREAM,
+                packet_type: PacketType::Downstream,
                 packet_id: 0x03,
             },
             chunk_length,
@@ -242,12 +251,13 @@ impl Serializable for LevelFinalizePacket{
 }
 
 impl LevelFinalizePacket {
-    pub fn new() -> Self{
-        Self{
+    pub fn new() -> Self {
+        Self {
             base: BasePacket{
-                packet_type: PackeType::DOWNSTREAM, 
+                packet_type: PacketType::Downstream, 
                 packet_id: 0x04},
-            x: 256, y:64, z: 256}
+            x: 256, y:64, z: 256
+        }
     }
 }
 

@@ -11,6 +11,8 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
+pub const BRAND: &str = "Blaze";
+
 pub struct Server {
     pub listener: TcpListener,
     pub name: String,
