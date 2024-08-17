@@ -26,6 +26,7 @@ impl World{
         let total_chunks = chunks.len() as f32;
         let mut packets: Vec<LevelDataChunkPacket> = vec![];
         for (i, chunk) in chunks.enumerate(){
+            println!("{}", chunk.len());
             let packet = LevelDataChunkPacket::new(1024, chunk, (((i as f32 + 1.0)/total_chunks) * 100.0) as u8);
             packets.push(packet);
         }
