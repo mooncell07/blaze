@@ -261,6 +261,40 @@ impl LevelFinalizePacket {
     }
 }
 
+#[derive(Debug)]
+pub struct SpawnPlayerPacket{
+    pub base: BasePacket,
+    pub player_id: i8,
+    pub player_name: String,
+    pub x: i16,
+    pub y: i16,
+    pub z: i16,
+    pub yaw: u8,
+    pub pitch: u8
+}
+
+impl Serializable for SpawnPlayerPacket {
+    fn build(&self) -> Result<Vec<u8>> {
+        let mut writer = vec![];
+        writer.write_u8(self.base.packet_id)?;
+        writer.write_i8(self.player_id)?;
+        writer.write(self.player_name.as_bytes())?;
+        writer.write_i16::<BigEndian>(self.x)?;
+        writer.write_i16::<BigEndian>(self.y)?;
+        writer.write_i16::<BigEndian>(self.z)?;
+        writer.write_u8(self.yaw)?;
+        writer.write_u8(self.pitch)?;
+        Ok(writer)
+    }
+}
+
+impl SpawnPlayerPacket{
+    pub fn new(player_name: &str) -> Self {
+        Self { base: BasePacket{packet_type: PackeType::DOWNSTREAM, packet_id: 0x07}, player_id: -1, player_name: get_qualified_string(player_name), x: 256, y: 1090, z: 256, yaw: 90, pitch: 30 }
+    }
+}
+
+
 pub enum Packet {
     PlayerIdentification(PlayerIdentificationPacket),
 }

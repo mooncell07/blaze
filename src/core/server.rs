@@ -1,7 +1,6 @@
 use super::{
     packet::{
-        LevelFinalizePacket, LevelInitializePacket, Packet, Serializable,
-        ServerIdentificationPacket,
+        LevelFinalizePacket, LevelInitializePacket, Packet, PlayerIdentificationPacket, Serializable, ServerIdentificationPacket, SpawnPlayerPacket
     },
     response::Response,
     world::World,
@@ -55,6 +54,9 @@ impl Server {
         }
         let level_finalize_packet = LevelFinalizePacket::new();
         self.send_packet(&level_finalize_packet, stream);
+
+        let spawn_player_packet = SpawnPlayerPacket::new("hiii");
+        self.send_packet(&spawn_player_packet, stream);
     }
 
     pub fn run(&mut self) {
