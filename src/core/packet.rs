@@ -290,7 +290,7 @@ impl Serializable for SpawnPlayerPacket {
 
 impl SpawnPlayerPacket{
     pub fn new(player_name: &str) -> Self {
-        Self { base: BasePacket{packet_type: PackeType::DOWNSTREAM, packet_id: 0x07}, player_id: -1, player_name: get_qualified_string(player_name), x: 256, y: 1090, z: 256, yaw: 90, pitch: 30 }
+        Self { base: BasePacket{packet_type: PacketType::Downstream, packet_id: 0x07}, player_id: -1, player_name: get_qualified_string(player_name), x: 256, y: 1090, z: 256, yaw: 90, pitch: 30 }
     }
 }
 
